@@ -28,5 +28,5 @@ mongoose.connect(config.database);
 require('./app/routes')(app);
 
 // Start the server
-app.listen(port);
+app.listen(port, '0.0.0.0');
 console.log('Your server is running on port ' + port + '.');
