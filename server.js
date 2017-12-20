@@ -9,6 +9,9 @@ const config = require('./config/main');
 const cors = require('cors');
 const port = 3000;
 
+
+// mongoose.Promise = require('bluebird');
+
 // Use body-parser to get POST requests for API use
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -16,6 +19,8 @@ app.use(cors());
 
 // Log requests to console
 app.use(morgan('dev'));
+app.use(passport.initialize());
+require('./config/passport')(passport);
 
 // Home route. We'll end up changing this to our main front end index later.
 app.get('/', function(req, res) {
@@ -24,6 +29,8 @@ app.get('/', function(req, res) {
 
 // Connect to database
 mongoose.connect(config.database);
+mongoose.Promise = global.Promise;
+
 
 require('./app/routes')(app);
 
