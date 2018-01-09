@@ -9,13 +9,22 @@
     "bluebird": "^3.5.1",
     "body-parser": "^1.15.0",
     "cors": "^2.7.1",
+    "crypto": "^1.0.1",
     "express": "^4.13.4",
     "jsonwebtoken": "^5.5.4",
+    "jssha": "^2.3.1",
     "mongoose": "^4.4.1",
+    "mongoose-text-search": "0.0.2",
     "morgan": "^1.6.1",
+    "nodemailer": "^4.4.1",
     "passport": "^0.3.2",
     "passport-facebook": "^2.1.1",
     "passport-google-oauth20": "^1.0.0",
-    "passport-jwt": "^2.0.0"
+    "passport-jwt": "^2.0.0",
+    "request": "^2.83.0",
+    "util": "^0.10.3"
+  },
+  "devDependencies": {
+    "babel-polyfill": "^6.26.0"
   }
 }

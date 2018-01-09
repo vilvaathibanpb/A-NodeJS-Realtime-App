@@ -9,6 +9,7 @@ const requireAuth = passport.authenticate('jwt', { session: false });
 
 // Load models
 const User = require('./models/user');
+const Userlog = require('./models/user_log');
 const Product = require('./models/product');
 
 // Export the routes for our app to use
@@ -23,10 +24,27 @@ module.exports = function (app) {
 
 	// Create API group routes
 	const apiRoutes = express.Router();
+	const saveLog = function(user,req){
+		
+		let dt = new Date();
+		const log = new Userlog({
+			 user_id : user._id,
+			 login_time : dt.toUTCString(),
+			 ip : req.header('x-forwarded-for') || req.connection.remoteAddress,
+			 user_agent : req.headers['user-agent']
+
+		});
+		// console.log(log);
+		log.save(function(err){
+			if(err) { console.log(err) }
+			return;
+		})
+		// console.log(user_id, login_time, ip, browser);
+
+	}
 
 	// Register new users
 	apiRoutes.post('/register', function (req, res) {
-		console.log(req.body);
 		if (!req.body.email || !req.body.password) {
 			res.status(400).json({ success: false, message: 'Please enter email and password.' });
 		} else {
@@ -49,7 +67,6 @@ module.exports = function (app) {
 
 	// Authenticate the user and get a JSON Web Token to include in the header of future requests.
 	apiRoutes.post('/authenticate', function (req, res) {
-		console.log(req.body);
 		User.findOne({
 			email: req.body.email
 		}, function (err, user) {
@@ -65,6 +82,7 @@ module.exports = function (app) {
 						const token = jwt.sign(user, config.secret, {
 							expiresIn: 10080 // in seconds
 						});
+						saveLog(user,req);
 						res.status(200).json({ success: true, token: 'JWT ' + token });
 					} else {
 						res.status(401).json({ success: false, message: 'Authentication failed. Passwords did not match.' });
@@ -74,10 +92,8 @@ module.exports = function (app) {
 		});
 	});
 
-	// Protect chat routes with JWT
-	// GET messages for authenticated user
-	// apiRoutes.get('/product/:category', requireAuth, function(req, res) {
-	apiRoutes.get('/product/:category', requireAuth, function (req, res) {
+	// Product List Api
+	apiRoutes.get('/product/:category', function (req, res) {
 		Product.findOne({
 			product_category: req.params.category
 		}, function (err, response) {
@@ -87,39 +103,38 @@ module.exports = function (app) {
 		})
 	});
 
+	// Google Auth
 	apiRoutes.get('/auth/google', passport.authenticate('google', {
 		scope: ['email' ]
 	}));
 
-	// apiRoutes.get('/auth/facebook', passport.authenticate('facebook',{ scope:'email' }));
+	// Facebook Auth
 	apiRoutes.get('/auth/facebook', passport.authenticate('facebook',{ scope: ['email','public_profile'] }));
 
+	// Google Redirect
 	apiRoutes.get('/auth/google/redirect', passport.authenticate('google'), (req, res) => {
-		// res.send(req.user);
-		console.log(req.user , "jj");
-		// res.redirect('/profile');
 		const token = jwt.sign(req.user, config.secret, {
 			expiresIn: 10080 // in seconds
 		});
-		res.status(200).json({ success: true, token: 'JWT ' + token });
+		saveLog(req.user,req);
+		res.redirect('http://localhost:8080/authToken?token=' + 'JWT ' + token);
 	});
 
+	// Facebook Redirect
 	apiRoutes.get('/auth/facebook/redirect', passport.authenticate('facebook'), (req, res) => {
-		// res.send(req.user);
-		// res.redirect('/profile');
-		console.log(req.user);
 		const token = jwt.sign(req.user, config.secret, {
 			expiresIn: 10080 // in seconds
 		});
-		res.status(200).json({ success: true, token: 'JWT ' + token });
+		saveLog(req.user,req);		
+		res.redirect('http://localhost:8080/authToken?token=' + 'JWT ' + token);
 	});
 
+	// Logout
 	apiRoutes.get('/logout', (req, res) => {
 		req.logout();
 		res.send("success");
 	});
 	
-
 	// Set url for API group routes
 	app.use('/api', apiRoutes);
 };

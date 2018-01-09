@@ -19,6 +19,13 @@ const UserSchema = new mongoose.Schema({
 		type: String,
 		required: true
 	},
+	otp:{
+		type: String
+	},
+	otp_expires : {
+		type: Date,
+		default: new Date()
+	},
 	google_id: {
 		type: String,
 		default: null
